@@ -19,5 +19,17 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
-
+Route::get('/setup-db', function() {
+    try {
+        // Xóa cache cũ
+        Artisan::call('optimize:clear');
+        
+        // Chạy lệnh tạo bảng trong database
+        Artisan::call('migrate', ['--force' => true]);
+        
+        return 'Thành công! Đã dọn cache và tạo bảng DB. <br> <a href="/">Bấm vào đây để về trang chủ đăng nhập</a>';
+    } catch (\Exception $e) {
+        return 'Có lỗi xảy ra: ' . $e->getMessage();
+    }
+});
 require __DIR__.'/auth.php';
