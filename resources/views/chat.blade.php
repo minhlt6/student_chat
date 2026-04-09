@@ -1,98 +1,160 @@
 <x-app-layout>
-    <div class="flex h-[calc(100vh-65px)] bg-slate-50 overflow-hidden">
-        
-        <div class="w-72 bg-white border-r border-gray-200 flex flex-col shadow-sm z-10 transition-all">
-            <div class="p-4 border-b border-gray-100">
-                <button onclick="startNewSession()" class="w-full flex items-center justify-center gap-2 bg-[#4a7b9d] hover:bg-[#396381] text-white font-medium py-2.5 px-4 rounded-xl transition-all shadow-sm">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+    @php
+        $isAuthenticated = Auth::check();
+        $displayName = $isAuthenticated ? (string) Auth::user()->name : "Khach";
+        $avatarLetter = strtoupper(substr($displayName, 0, 1));
+        $chatContainerHeightClass = $isAuthenticated ? "h-[calc(100vh-65px)]" : "h-screen";
+    @endphp
+
+    <div class="{{ $chatContainerHeightClass }} flex overflow-hidden bg-slate-50">
+
+        <div class="z-10 flex w-72 flex-col border-r border-gray-200 bg-white shadow-sm transition-all">
+            <div class="border-b border-gray-100 p-4">
+                <button onclick="startNewSession()"
+                    class="flex w-full items-center justify-center gap-2 rounded-xl bg-[#4a7b9d] px-4 py-2.5 font-medium text-white shadow-sm transition-all hover:bg-[#396381]">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
                     Cuộc trò chuyện mới
                 </button>
             </div>
 
-            <div class="flex-1 overflow-y-auto p-3 space-y-1" id="session-list">
-                <div class="text-center text-gray-400 text-sm mt-10">
-                    <svg class="w-8 h-8 mx-auto mb-2 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    Đang tải lịch sử...
-                </div>
+            <div class="flex-1 space-y-1 overflow-y-auto p-3" id="session-list">
+                @if ($isAuthenticated)
+                    <div class="mt-10 text-center text-sm text-gray-400">
+                        <svg class="mx-auto mb-2 h-8 w-8 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                        Đang tải lịch sử...
+                    </div>
+                @else
+                    <div class="mt-10 px-2 text-center text-sm text-gray-500">
+                        Dang chat voi che do khach.<br>
+                        Lich su se khong duoc luu.
+                    </div>
+                @endif
             </div>
-            
-            <div class="p-4 border-t border-gray-100 bg-gray-50 flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-[#4a7b9d] text-white flex items-center justify-center font-bold">
-                    {{ substr(Auth::user()->name, 0, 1) }}
+
+            <div class="flex items-center gap-3 border-t border-gray-100 bg-gray-50 p-4">
+                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[#4a7b9d] font-bold text-white">
+                    {{ $avatarLetter }}
                 </div>
-                <div class="text-sm overflow-hidden">
-                    <p class="font-bold text-gray-800 truncate">{{ Auth::user()->name }}</p>
-                    <p class="text-xs text-gray-500 truncate">Sinh viên TLU</p>
+                <div class="overflow-hidden text-sm">
+                    <p class="truncate font-bold text-gray-800">{{ $displayName }}</p>
+                    <p class="truncate text-xs text-gray-500">
+                        {{ $isAuthenticated ? "Tai khoan da dang nhap" : "Khach truy cap" }}</p>
                 </div>
             </div>
         </div>
 
-        <div class="flex-1 flex flex-col h-full relative">
-            <div class="h-16 bg-white/80 backdrop-blur-md border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 z-20">
+        <div class="relative flex h-full flex-1 flex-col">
+            <div
+                class="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-gray-200 bg-white/80 px-6 backdrop-blur-md">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-xl">🤖</div>
+                    <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-xl">🤖</div>
                     <div>
-                        <h2 class="font-bold text-gray-800 leading-tight">Trợ Lý AI Quy Chế Đào Tạo</h2>
-                        <p class="text-xs text-green-600 font-medium flex items-center gap-1">
-                            <span class="w-2 h-2 rounded-full bg-green-500"></span> Hệ thống RAG đang hoạt động
+                        <h2 class="font-bold leading-tight text-gray-800">Trợ Lý AI Quy Chế Đào Tạo</h2>
+                        <p class="flex items-center gap-1 text-xs font-medium text-green-600">
+                            <span class="h-2 w-2 rounded-full bg-green-500"></span> Hệ thống RAG đang hoạt động
                         </p>
                     </div>
                 </div>
             </div>
 
-            <div id="chat-box" class="flex-1 p-6 overflow-y-auto flex flex-col gap-6 scroll-smooth pb-32">
-                <div class="flex items-start gap-4 max-w-[85%]">
-                    <div class="w-10 h-10 rounded-full bg-blue-100 flex-shrink-0 flex items-center justify-center text-2xl shadow-sm border border-blue-200">🤖</div>
-                    <div class="bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border border-gray-100 text-gray-800 leading-relaxed text-sm md:text-base">
-                        Chào bạn! Mình là AI hỗ trợ tra cứu quy chế học vụ của trường. Hãy đặt câu hỏi, mình sẽ đối chiếu với cơ sở dữ liệu để trả lời chuẩn xác nhất!
+            <div id="chat-box" class="flex flex-1 flex-col gap-6 overflow-y-auto scroll-smooth p-6 pb-32">
+                <div class="flex max-w-[85%] items-start gap-4">
+                    <div
+                        class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-blue-200 bg-blue-100 text-2xl shadow-sm">
+                        🤖</div>
+                    <div
+                        class="rounded-2xl rounded-tl-none border border-gray-100 bg-white p-4 text-sm leading-relaxed text-gray-800 shadow-sm md:text-base">
+                        Chào bạn! Mình là AI hỗ trợ tra cứu quy chế học vụ của trường. Hãy đặt câu hỏi, mình sẽ đối
+                        chiếu với cơ sở dữ liệu để trả lời chuẩn xác nhất!
                     </div>
                 </div>
             </div>
 
-            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-50 via-slate-50 to-transparent pt-10 pb-6 px-6">
-                <div class="max-w-4xl mx-auto bg-white border border-gray-300 rounded-2xl shadow-lg flex items-end overflow-hidden focus-within:ring-2 focus-within:ring-[#4a7b9d] focus-within:border-transparent transition-all">
-                    <textarea id="user-input" rows="1" 
-                        class="flex-1 max-h-32 px-5 py-4 bg-transparent border-0 focus:ring-0 resize-none text-gray-800 placeholder-gray-400 leading-relaxed"
-                        placeholder="Nhập câu hỏi của bạn về quy chế... (Shift + Enter để xuống dòng)" 
-                        onkeydown="handleKeyDown(event)"></textarea>
-                    
+            <div
+                class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-50 via-slate-50 to-transparent px-6 pb-6 pt-10">
+                <div
+                    class="mx-auto flex max-w-4xl items-end overflow-hidden rounded-2xl border border-gray-300 bg-white shadow-lg transition-all focus-within:border-transparent focus-within:ring-2 focus-within:ring-[#4a7b9d]">
+                    <textarea id="user-input" rows="1"
+                        class="max-h-32 flex-1 resize-none border-0 bg-transparent px-5 py-4 leading-relaxed text-gray-800 placeholder-gray-400 focus:ring-0"
+                        placeholder="Nhập câu hỏi của bạn về quy chế... (Shift + Enter để xuống dòng)" onkeydown="handleKeyDown(event)"></textarea>
+
                     <button onclick="sendMessage()" id="send-btn"
-                        class="m-2 bg-[#4a7b9d] hover:bg-[#396381] text-white p-3 rounded-xl transition-all flex items-center justify-center disabled:opacity-50">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                        class="m-2 flex items-center justify-center rounded-xl bg-[#4a7b9d] p-3 text-white transition-all hover:bg-[#396381] disabled:opacity-50">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                        </svg>
                     </button>
                 </div>
-                <p class="text-center text-xs text-gray-400 mt-3">AI có thể trả lời chưa chính xác. Vui lòng đối chiếu với văn bản gốc nếu cần.</p>
+                <p class="mt-3 text-center text-xs text-gray-400">AI có thể trả lời chưa chính xác. Vui lòng đối chiếu
+                    với văn bản gốc nếu cần.</p>
             </div>
         </div>
     </div>
 
     <script>
-        const chatbotApiBaseUrl = @json(rtrim(config('services.chatbot.base_url'), '/'));
-        const userId = "{{ Auth::id() }}";
-        let currentSessionId = generateUUID();
+        const userId = @json(Auth::id() ?? "guest");
+        const userAvatarLetter = @json($avatarLetter);
+        const isAuthenticated = @json($isAuthenticated);
+        const sessionsEndpoint = "{{ route("chat.sessions", absolute: false) }}";
+        const sessionMessagesEndpointTemplate =
+            "{{ route("chat.session.messages", ["sessionId" => "__SESSION__"], absolute: false) }}";
+        let currentSessionId = null;
 
         // Hàm tạo session_id ngẫu nhiên
         function generateUUID() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                var r = Math.random() * 16 | 0,
+                    v = c == 'x' ? r : (r & 0x3 | 0x8);
                 return v.toString(16);
             });
         }
 
         // Tải danh sách lịch sử khi mở trang
-        document.addEventListener('DOMContentLoaded', loadSessions);
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!isAuthenticated) {
+                return;
+            }
+
+            const sessions = await loadSessions();
+
+            if (sessions.length > 0) {
+                await switchSession(sessions[0].session_id, false);
+            }
+        });
 
         async function loadSessions() {
-            try {
-            
-                const response = await fetch(`${chatbotApiBaseUrl}/sessions/${userId}`);
-                const data = await response.json();
-                
-                const sessionList = document.getElementById('session-list');
-                sessionList.innerHTML = ''; 
+            if (!isAuthenticated) {
+                return [];
+            }
 
-                if (data.sessions && data.sessions.length > 0) {
-                    data.sessions.forEach(session => {
+            try {
+                const response = await fetch(sessionsEndpoint, {
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Khong the tai danh sach phien chat: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const sessions = Array.isArray(data.sessions) ? data.sessions : [];
+
+                const sessionList = document.getElementById('session-list');
+                sessionList.innerHTML = '';
+
+                if (sessions.length > 0) {
+                    sessions.forEach(session => {
                         const isActive = session.session_id === currentSessionId;
                         sessionList.innerHTML += `
                             <button onclick="switchSession('${session.session_id}')" 
@@ -109,9 +171,13 @@
                             <p class="text-xs mt-1 text-center px-4">Hãy bắt đầu cuộc trò chuyện mới với AI nhé!</p>
                         </div>`;
                 }
+
+                return sessions;
             } catch (error) {
                 console.error("Lỗi tải lịch sử:", error);
-                document.getElementById('session-list').innerHTML = `<p class="text-xs text-red-400 text-center mt-4">Không thể tải lịch sử.</p>`;
+                document.getElementById('session-list').innerHTML =
+                    `<p class="text-xs text-red-400 text-center mt-4">Không thể tải lịch sử.</p>`;
+                return [];
             }
         }
 
@@ -129,7 +195,11 @@
         }
 
         // Hàm chuyển đổi phiên chat
-        async function switchSession(sessionId) {
+        async function switchSession(sessionId, refreshSidebar = true) {
+            if (!isAuthenticated) {
+                return;
+            }
+
             currentSessionId = sessionId;
             const chatBox = document.getElementById('chat-box');
 
@@ -139,11 +209,22 @@
                     <svg class="w-8 h-8 text-[#4a7b9d] animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                 </div>`;
 
-            loadSessions();
+            if (refreshSidebar) {
+                await loadSessions();
+            }
 
             try {
-                // Gọi thẳng sang Python để lấy tin nhắn cũ
-                const response = await fetch(`${chatbotApiBaseUrl}/chat/history/${sessionId}`);
+                const response = await fetch(sessionMessagesEndpointTemplate.replace('__SESSION__', encodeURIComponent(
+                    sessionId)), {
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Khong the tai lich su phien chat: ${response.status}`);
+                }
+
                 const data = await response.json();
 
                 chatBox.innerHTML = ''; // Xóa icon loading
@@ -155,14 +236,15 @@
                             chatBox.innerHTML += `
                                 <div class="flex items-start gap-4 max-w-[85%] self-end flex-row-reverse">
                                     <div class="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center text-sm shadow-sm font-bold text-gray-600 border border-gray-300">
-                                        {{ substr(Auth::user()->name, 0, 1) }}
+                                        ${userAvatarLetter}
                                     </div>
                                     <div class="bg-[#4a7b9d] text-white p-4 rounded-2xl rounded-tr-none shadow-sm leading-relaxed text-sm md:text-base">
                                         ${msg.content.replace(/\n/g, "<br>")}
                                     </div>
                                 </div>`;
                         } else {
-                            let formattedReply = msg.content.replace(/\n/g, "<br>").replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+                            let formattedReply = msg.content.replace(/\n/g, "<br>").replace(/\*\*(.*?)\*\*/g,
+                                "<strong>$1</strong>");
                             chatBox.innerHTML += `
                                 <div class="flex items-start gap-4 max-w-[85%]">
                                     <div class="w-10 h-10 rounded-full bg-blue-100 flex-shrink-0 flex items-center justify-center text-2xl shadow-sm border border-blue-200">🤖</div>
@@ -184,7 +266,8 @@
                     </div>`;
                 }
             } catch (error) {
-                chatBox.innerHTML = `<div class="text-center text-red-400 mt-10">Không thể tải nội dung đoạn chat.</div>`;
+                chatBox.innerHTML =
+                    `<div class="text-center text-red-400 mt-10">Không thể tải nội dung đoạn chat.</div>`;
             }
         }
 
@@ -206,8 +289,12 @@
             const chatBox = document.getElementById("chat-box");
             const sendBtn = document.getElementById("send-btn");
             const message = inputField.value.trim();
-            
+
             if (!message) return;
+
+            if (!currentSessionId) {
+                currentSessionId = generateUUID();
+            }
 
             // Khóa input và nút gửi để tránh bấm nhiều lần
             inputField.disabled = true;
@@ -218,17 +305,17 @@
             chatBox.innerHTML += `
                 <div class="flex items-start gap-4 max-w-[85%] self-end flex-row-reverse">
                     <div class="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center text-sm shadow-sm font-bold text-gray-600 border border-gray-300">
-                        {{ substr(Auth::user()->name, 0, 1) }}
+                        ${userAvatarLetter}
                     </div>
                     <div class="bg-[#4a7b9d] text-white p-4 rounded-2xl rounded-tr-none shadow-sm leading-relaxed text-sm md:text-base">
                         ${message.replace(/\n/g, "<br>")}
                     </div>
                 </div>`;
-            
+
             inputField.value = "";
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            
+
             const typingId = "typing_" + Date.now();
             chatBox.innerHTML += `
                 <div id="${typingId}" class="flex items-start gap-4 max-w-[85%]">
@@ -243,25 +330,26 @@
 
             try {
                 //Gửi request đến route chat.send để lấy câu trả lời từ AI
-                const response = await fetch("{{ route('chat.send') }}", {
+                const response = await fetch("{{ route("chat.send") }}", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                         "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
                     },
-                    body: JSON.stringify({ 
+                    body: JSON.stringify({
                         session_id: currentSessionId,
                         user_id: userId,
-                        message: message 
+                        message: message
                     })
                 });
 
                 const data = await response.json();
                 const typingElement = document.getElementById(typingId);
-                
+
                 // Hiển thị câu trả lời của AI
                 if (response.ok) {
-                    let formattedReply = data.reply ? data.reply.replace(/\n/g, "<br>") : data.response.replace(/\n/g, "<br>");
+                    let formattedReply = data.reply ? data.reply.replace(/\n/g, "<br>") : data.response.replace(/\n/g,
+                        "<br>");
                     // Chuyển Markdown in đậm thành thẻ strong
                     formattedReply = formattedReply.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
 
@@ -270,9 +358,11 @@
                         <div class="bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border border-gray-100 text-gray-800 leading-relaxed text-sm md:text-base">
                             ${formattedReply}
                         </div>`;
-                    
+
                     // Tải lại để cập nhật danh sách mới nhất
-                    loadSessions();
+                    if (isAuthenticated) {
+                        loadSessions();
+                    }
                 } else {
                     throw new Error(data.reply || "Lỗi máy chủ");
                 }
@@ -284,7 +374,7 @@
                         Có lỗi xảy ra khi kết nối máy chủ AI. Vui lòng thử lại.
                     </div>`;
             }
-            
+
             // Mở khóa input và nút gửi sau khi nhận được phản hồi
             inputField.disabled = false;
             sendBtn.disabled = false;

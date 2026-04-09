@@ -27,9 +27,11 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+
         if ($request->user()->isAdmin()) {
             return redirect()->route('admin.dashboard');
         }
+
         return redirect()->intended(route('chat.index', absolute: false));
     }
 

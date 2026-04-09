@@ -1,214 +1,378 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Control Panel - RAG Dashboard</title>
-    <!-- Import Tailwind CSS via CDN for styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Thêm thư viện Font Awesome cho icon -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body class="bg-gray-100 font-sans leading-normal tracking-normal h-screen flex overflow-hidden">
-    
-    <!-- Sidebar / Menu cột trái -->
-    <div class="w-64 bg-slate-800 text-white flex flex-col h-full shadow-lg">
-        <div class="h-16 flex items-center justify-center border-b border-gray-700 font-bold text-xl px-4">
-            <i class="fa-solid fa-robot mr-2"></i> RAG Admin
-        </div>
-        <div class="flex-1 overflow-y-auto mt-4 px-2 space-y-2">
-            <a href="{{ route('admin.dashboard') }}" class="block px-4 py-3 bg-blue-600 rounded-lg hover:bg-blue-700 transition">
-                <i class="fa-solid fa-chart-line mr-2"></i> Dashboard
-            </a>
-            <a href="#kb-upload" class="block px-4 py-3 hover:bg-gray-700 rounded-lg transition">
-                <i class="fa-solid fa-book-open mr-2"></i> Quản lý Tài liệu
-            </a>
-        </div>
-        <!-- Vùng Đăng xuất -->
-        <div class="p-4 border-t border-gray-700">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="w-full flex items-center justify-center p-2 bg-red-600 hover:bg-red-700 rounded-lg transition">
-                    <i class="fa-solid fa-right-from-bracket mr-2"></i> Logout
-                </button>
-            </form>
-        </div>
-    </div>
 
-    <!-- Vùng nội dung chính (Main Content) -->
-    <main class="flex-1 flex flex-col overflow-hidden">
-        <!-- Top Navbar -->
-        <header class="h-16 bg-white shadow flex items-center justify-between px-6 z-10 w-full shrink-0">
-            <h1 class="text-2xl font-semibold text-gray-800">Admin Control Panel</h1>
-            <div class="flex items-center text-gray-600">
-                <i class="fa-solid fa-user-shield text-xl mr-2"></i>
-                <span class="font-medium">Administrator</span>
+    @php
+        $totalStudents = $totalStudents ?? 0;
+        $totalQuestions = $totalQuestions ?? 0;
+        $folders = $folders ?? [];
+        $selectedFolder = $selectedFolder ?? null;
+        $folderFiles = $folderFiles ?? [];
+        $storageWarning = $storageWarning ?? null;
+    @endphp
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Admin Control Panel - RAG Dashboard</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    </head>
+
+    <body class="flex h-screen overflow-hidden bg-gray-100 font-sans leading-normal tracking-normal">
+
+        <div class="flex h-full w-64 flex-col bg-slate-800 text-white shadow-lg">
+            <div class="flex h-16 items-center justify-center border-b border-gray-700 px-4 text-xl font-bold">
+                <i class="fa-solid fa-robot mr-2"></i> RAG Admin
             </div>
-        </header>
-
-        <!-- Vùng cuộn chứa các Card -->
-        <div class="flex-1 overflow-y-auto p-6 space-y-8 bg-gray-50">
-
-            @if (session('uploadSuccess'))
-                <div class="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-green-800">
-                    <p class="font-semibold">{{ session('uploadSuccess') }}</p>
-                    @if (session('uploadedDocumentId'))
-                        <p class="text-sm mt-1">Mã tài liệu: {{ session('uploadedDocumentId') }}</p>
-                    @endif
-                </div>
-            @endif
-
-            @if ($documentListWarning)
-                <div class="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-yellow-800">
-                    {{ $documentListWarning }}
-                </div>
-            @endif
-
-            @if (!empty($documentListNotice))
-                <div class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-blue-800">
-                    {{ $documentListNotice }}
-                </div>
-            @endif
-
-            @if ($errors->any())
-                <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700">
-                    @foreach ($errors->all() as $error)
-                        <p>{{ $error }}</p>
-                    @endforeach
-                </div>
-            @endif
-            
-            <!-- Statistics Section (Phần thống kê) -->
-            <div>
-                <h2 class="text-xl font-bold text-gray-700 mb-4 border-b pb-2"><i class="fa-solid fa-chart-pie mr-2"></i> Statistics</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Metric Card: Total Students -->
-                    <div class="bg-white rounded-xl shadow p-6 flex items-center hover:shadow-lg transition">
-                        <div class="p-4 rounded-full bg-blue-100 text-blue-600">
-                            <i class="fa-solid fa-users text-3xl"></i>
-                        </div>
-                        <div class="ml-6">
-                            <p class="text-gray-500 font-medium text-sm">Total Students</p>
-                            <p class="text-3xl font-bold text-gray-800">{{ $totalStudents ?? 0 }}</p>
-                        </div>
-                    </div>
-                    
-                    <!-- Metric Card: Total Questions Asked -->
-                    <div class="bg-white rounded-xl shadow p-6 flex items-center hover:shadow-lg transition">
-                        <div class="p-4 rounded-full bg-green-100 text-green-600">
-                            <i class="fa-solid fa-comments text-3xl"></i>
-                        </div>
-                        <div class="ml-6">
-                            <p class="text-gray-500 font-medium text-sm">Total Questions Asked</p>
-                            <p class="text-3xl font-bold text-gray-800">{{ $totalQuestions ?? 0 }}</p>
-                        </div>
-                    </div>
-                </div>
+            <div class="mt-4 flex-1 space-y-2 overflow-y-auto px-2">
+                <a href="{{ route("admin.dashboard") }}"
+                    class="block rounded-lg bg-blue-600 px-4 py-3 transition hover:bg-blue-700">
+                    <i class="fa-solid fa-chart-line mr-2"></i> Dashboard
+                </a>
+                <a href="#folder-management" class="block rounded-lg px-4 py-3 transition hover:bg-gray-700">
+                    <i class="fa-solid fa-folder-tree mr-2"></i> Quản lý Năm học
+                </a>
+                <a href="#kb-upload" class="block rounded-lg px-4 py-3 transition hover:bg-gray-700">
+                    <i class="fa-solid fa-file-arrow-up mr-2"></i> Upload tài liệu
+                </a>
             </div>
+            <div class="border-t border-gray-700 p-4">
+                <form method="POST" action="{{ route("logout") }}">
+                    @csrf
+                    <button type="submit"
+                        class="flex w-full items-center justify-center rounded-lg bg-red-600 p-2 transition hover:bg-red-700">
+                        <i class="fa-solid fa-right-from-bracket mr-2"></i> Logout
+                    </button>
+                </form>
+            </div>
+        </div>
 
-            <!-- Knowledge Base Upload Section -->
-            <div id="kb-upload" class="bg-white rounded-xl shadow overflow-hidden border border-gray-100">
-                <div class="bg-indigo-50 px-6 py-4 border-b border-gray-200">
-                    <h2 class="text-lg font-bold text-indigo-800 flex items-center">
-                        <i class="fa-solid fa-file-arrow-up mr-3 text-indigo-600"></i> Knowledge Base Upload
-                    </h2>
-                    <p class="text-sm text-gray-600 mt-1">Tải lên các tài liệu để huấn luyện hệ thống cho Chatbot RAG.</p>
+        <main class="flex flex-1 flex-col overflow-hidden">
+            <header class="z-10 flex h-16 w-full shrink-0 items-center justify-between bg-white px-6 shadow">
+                <h1 class="text-2xl font-semibold text-gray-800">Admin Control Panel</h1>
+                <div class="flex items-center text-gray-600">
+                    <i class="fa-solid fa-user-shield mr-2 text-xl"></i>
+                    <span class="font-medium">Administrator</span>
                 </div>
-                
-                <div class="p-6">
-                    <!-- Form Upload file với enctype 'multipart/form-data' để nhận file -->
-                    <form method="POST" action="{{ route('admin.upload-document') }}" enctype="multipart/form-data">
-                        @csrf
-                        
-                        <div class="mb-5">
-                            <label for="documentFile" class="block text-sm font-medium text-gray-700 mb-2">Chọn tệp (.pdf, .docx, .txt)</label>
-                            
-                            <div class="flex items-center justify-center w-full">
-                                <label for="documentFile" class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 border-gray-300 hover:bg-gray-100 hover:border-indigo-400 transition">
-                                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                        <i class="fa-solid fa-cloud-arrow-up text-4xl text-gray-400 mb-3"></i>
-                                        <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Nhấn để tải lên</span> hoặc kéo thả file vào đây</p>
-                                        <p class="text-xs text-gray-400">PDF, DOCX, TXT</p>
-                                    </div>
-                                    <input id="documentFile" name="documentFile" type="file" accept=".pdf, .docx, .txt" class="hidden" required />
-                                </label>
+            </header>
+
+            <div class="flex-1 space-y-8 overflow-y-auto bg-gray-50 p-6">
+                @if (session("success"))
+                    <div class="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-green-800">
+                        {{ session("success") }}
+                    </div>
+                @endif
+
+                @if (session("warning"))
+                    <div class="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-yellow-800">
+                        {{ session("warning") }}
+                    </div>
+                @endif
+
+                @if ($storageWarning)
+                    <div class="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-yellow-800">
+                        {{ $storageWarning }}
+                    </div>
+                @endif
+
+                @if ($errors->any())
+                    <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+                        @foreach ($errors->all() as $error)
+                            <p>{{ $error }}</p>
+                        @endforeach
+                    </div>
+                @endif
+
+                <div>
+                    <h2 class="mb-4 border-b pb-2 text-xl font-bold text-gray-700"><i
+                            class="fa-solid fa-chart-pie mr-2"></i> Statistics</h2>
+                    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <div class="flex items-center rounded-xl bg-white p-6 shadow transition hover:shadow-lg">
+                            <div class="rounded-full bg-blue-100 p-4 text-blue-600">
+                                <i class="fa-solid fa-users text-3xl"></i>
                             </div>
-                                    <p class="text-xs text-gray-500 mt-2">Lưu ý: Chọn file chưa gửi lên AI server ngay. File chỉ được gửi khi bấm nút Upload & Process RAG.</p>
-                                    @error('documentFile')
-                                        <p class="text-sm text-red-600 mt-2">{{ $message }}</p>
-                                    @enderror
+                            <div class="ml-6">
+                                <p class="text-sm font-medium text-gray-500">Total Students</p>
+                                <p class="text-3xl font-bold text-gray-800">{{ $totalStudents ?? 0 }}</p>
+                            </div>
                         </div>
 
-                        <div class="flex justify-end">
-                            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg shadow transition flex items-center">
-                                <i class="fa-solid fa-gears mr-2"></i> Upload & Process RAG
+                        <div class="flex items-center rounded-xl bg-white p-6 shadow transition hover:shadow-lg">
+                            <div class="rounded-full bg-green-100 p-4 text-green-600">
+                                <i class="fa-solid fa-comments text-3xl"></i>
+                            </div>
+                            <div class="ml-6">
+                                <p class="text-sm font-medium text-gray-500">Total Questions Asked</p>
+                                <p class="text-3xl font-bold text-gray-800">{{ $totalQuestions ?? 0 }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="folder-management" class="overflow-hidden rounded-xl border border-gray-100 bg-white shadow">
+                    <div class="border-b border-gray-200 bg-slate-50 px-6 py-4">
+                        <h2 class="flex items-center text-lg font-bold text-slate-800">
+                            <i class="fa-solid fa-folder-tree mr-3 text-slate-600"></i> Quản lý folder năm học
+                        </h2>
+                        <p class="mt-1 text-sm text-gray-600">Tạo folder mới theo năm học, ví dụ: Sổ tay sinh viên
+                            2023-2024.</p>
+                    </div>
+
+                    <div class="space-y-6 p-6">
+                        <form method="POST" action="{{ route("admin.folders.store") }}"
+                            class="grid grid-cols-1 items-end gap-3">
+                            @csrf
+                            <div>
+                                <label for="folder_name" class="mb-2 block text-sm font-medium text-gray-700">Tên
+                                    folder năm học</label>
+                                <input id="folder_name" name="folder_name" type="text" required
+                                    class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-indigo-500"
+                                    placeholder="2024-2025" value="{{ old("folder_name") }}" />
+                                @error("folder_name")
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <button type="submit"
+                                class="w-fit rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white transition hover:bg-indigo-700">
+                                Tạo folder
                             </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+                        </form>
 
-            <div class="bg-white rounded-xl shadow overflow-hidden border border-gray-100">
-                <div class="bg-slate-50 px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-3">
-                    <h2 class="text-lg font-bold text-slate-800 flex items-center">
-                        <i class="fa-solid fa-folder-tree mr-3 text-slate-600"></i> Tài liệu gần đây
-                    </h2>
-                    <a href="{{ route('admin.dashboard', ['load_documents' => 1]) }}"
-                       class="inline-flex items-center px-3 py-2 rounded-lg bg-slate-700 text-white text-sm hover:bg-slate-800 transition">
-                        <i class="fa-solid fa-rotate mr-2"></i> Làm mới danh sách
-                    </a>
-                </div>
-
-                <div class="p-6">
-                    @if (!empty($documents))
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full text-sm">
-                                <thead>
-                                    <tr class="text-left text-gray-500 border-b">
-                                        <th class="py-3 pr-4">Tên tài liệu</th>
-                                        <th class="py-3 pr-4">Trạng thái</th>
-                                        <th class="py-3 pr-4">Chunks</th>
-                                        <th class="py-3">Thời gian</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($documents as $document)
-                                        @php
-                                            $status = $document['status'] ?? 'unknown';
-                                            $badgeClass = $status === 'done'
-                                                ? 'bg-green-100 text-green-700'
-                                                : ($status === 'processing'
-                                                    ? 'bg-amber-100 text-amber-700'
-                                                    : ($status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'));
-                                        @endphp
-                                        <tr class="border-b last:border-0">
-                                            <td class="py-3 pr-4 text-gray-800">{{ $document['original_name'] ?? '-' }}</td>
-                                            <td class="py-3 pr-4">
-                                                <span class="inline-block px-2.5 py-1 rounded-full text-xs font-semibold {{ $badgeClass }}">
-                                                    {{ strtoupper($status) }}
-                                                </span>
-                                            </td>
-                                            <td class="py-3 pr-4 text-gray-700">{{ $document['total_chunks'] ?? 0 }}</td>
-                                            <td class="py-3 text-gray-500">{{ $document['created_at'] ?? '-' }}</td>
+                        @if (!empty($folders))
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full text-sm">
+                                    <thead>
+                                        <tr class="border-b text-left text-gray-500">
+                                            <th class="py-3 pr-4">Tên năm học</th>
+                                            <th class="py-3 pr-4">Folder key</th>
+                                            <th class="py-3">Chỉnh sửa tên</th>
                                         </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    @else
-                        @if ($documentListWarning)
-                            <div class="text-sm text-amber-700">Không tải được danh sách tài liệu từ máy chủ AI. Vui lòng thử lại sau.</div>
-                        @elseif (empty($documentsLoaded))
-                            <div class="text-sm text-slate-600">Danh sách chưa được tải. Nhấn nút Làm mới danh sách để đồng bộ dữ liệu từ AI server.</div>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($folders as $folder)
+                                            <tr class="border-b last:border-0">
+                                                <td class="py-3 pr-4 font-medium text-gray-800">{{ $folder["name"] }}
+                                                </td>
+                                                <td class="py-3 pr-4 text-gray-600">{{ $folder["key"] }}</td>
+                                                <td class="py-3">
+                                                    <form method="POST"
+                                                        action="{{ route("admin.folders.update", ["folderKey" => $folder["key"]]) }}"
+                                                        class="flex items-center gap-2">
+                                                        @csrf
+                                                        @method("PATCH")
+                                                        <input type="text" name="folder_name"
+                                                            value="{{ $folder["name"] }}"
+                                                            class="w-full max-w-xs rounded-lg border border-gray-300 px-2 py-1 text-sm">
+                                                        <button type="submit"
+                                                            class="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600">Lưu</button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
                         @else
-                            <div class="text-sm text-gray-500">Chưa có tài liệu nào.</div>
+                            <p class="text-sm text-gray-500">Chưa có folder nào. Hãy tạo folder năm học đầu tiên.</p>
                         @endif
-                    @endif
+                    </div>
                 </div>
+
+                <div id="kb-upload" class="overflow-hidden rounded-xl border border-gray-100 bg-white shadow">
+                    <div class="border-b border-gray-200 bg-indigo-50 px-6 py-4">
+                        <h2 class="flex items-center text-lg font-bold text-indigo-800">
+                            <i class="fa-solid fa-file-arrow-up mr-3 text-indigo-600"></i> Upload tài liệu theo năm học
+                        </h2>
+                        <p class="mt-1 text-sm text-gray-600">Admin chọn folder năm học rồi upload tài liệu lên
+                            Supabase bucket.</p>
+                    </div>
+
+                    <div class="p-6">
+                        <form method="POST" action="{{ route("admin.upload-document") }}"
+                            enctype="multipart/form-data">
+                            @csrf
+
+                            <div class="mb-5">
+                                <label for="folder_key" class="mb-2 block text-sm font-medium text-gray-700">Chọn
+                                    folder năm học</label>
+                                <select id="folder_key" name="folder_key"
+                                    class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-indigo-500"
+                                    {{ empty($folders) ? "disabled" : "" }} required>
+                                    @foreach ($folders as $folder)
+                                        <option value="{{ $folder["key"] }}"
+                                            {{ ($selectedFolder["key"] ?? "") === $folder["key"] ? "selected" : "" }}>
+                                            {{ $folder["name"] }} ({{ $folder["key"] }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @if (empty($folders))
+                                    <p class="mt-2 text-sm text-red-600">Bạn cần tạo ít nhất 1 folder năm học trước khi
+                                        upload file.</p>
+                                @endif
+                            </div>
+
+                            <div class="mb-5">
+                                <label for="documentFiles" class="mb-2 block text-sm font-medium text-gray-700">Chọn
+                                    tệp (.pdf, .docx, .txt)</label>
+
+                                <div class="flex w-full items-center justify-center">
+                                    <label for="documentFiles"
+                                        class="flex h-40 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition hover:border-indigo-400 hover:bg-gray-100">
+                                        <div class="flex flex-col items-center justify-center pb-6 pt-5">
+                                            <i class="fa-solid fa-cloud-arrow-up mb-3 text-4xl text-gray-400"></i>
+                                            <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Nhấn để
+                                                    tải lên</span> hoặc kéo thả nhiều file vào đây</p>
+                                            <p class="text-xs text-gray-400">PDF, DOCX, TXT (chon nhieu tep)</p>
+                                        </div>
+                                        <input id="documentFiles" name="documentFiles[]" type="file"
+                                            accept=".pdf, .docx, .txt" class="hidden" multiple required />
+                                    </label>
+                                </div>
+
+                                <div id="selected-files-panel"
+                                    class="mt-3 hidden rounded-lg border border-slate-200 bg-slate-50 p-3">
+                                    <p class="mb-2 text-sm font-semibold text-slate-700">Tệp đã chọn:</p>
+                                    <ul id="selected-files-list"
+                                        class="list-disc space-y-1 pl-5 text-sm text-slate-700">
+                                    </ul>
+                                </div>
+
+                                <p class="mt-2 text-xs text-gray-500">File sẽ được lưu vào bucket Supabase theo folder
+                                    năm học đã chọn.</p>
+                                @error("documentFiles")
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                                @if ($errors->has("documentFiles.*"))
+                                    <p class="mt-2 text-sm text-red-600">{{ $errors->first("documentFiles.*") }}</p>
+                                @endif
+                            </div>
+
+                            <div class="flex justify-end">
+                                <button type="submit"
+                                    class="{{ empty($folders) ? "opacity-50 cursor-not-allowed" : "" }} flex items-center rounded-lg bg-indigo-600 px-6 py-2 font-bold text-white shadow transition hover:bg-indigo-700"
+                                    {{ empty($folders) ? "disabled" : "" }}>
+                                    <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Upload vào Supabase
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="overflow-hidden rounded-xl border border-gray-100 bg-white shadow">
+                    <div
+                        class="flex items-center justify-between gap-3 border-b border-gray-200 bg-slate-50 px-6 py-4">
+                        <h2 class="flex items-center text-lg font-bold text-slate-800">
+                            <i class="fa-solid fa-file-lines mr-3 text-slate-600"></i> Danh sách file theo năm học
+                        </h2>
+                        @if (!empty($folders))
+                            <form method="GET" action="{{ route("admin.dashboard") }}"
+                                class="flex items-center gap-2">
+                                <label for="list_folder_key" class="text-sm font-medium text-slate-700">Chọn năm
+                                    học</label>
+                                <select id="list_folder_key" name="folder"
+                                    class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    @foreach ($folders as $folder)
+                                        <option value="{{ $folder["key"] }}"
+                                            {{ ($selectedFolder["key"] ?? "") === $folder["key"] ? "selected" : "" }}>
+                                            {{ $folder["name"] }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <button type="submit"
+                                    class="inline-flex items-center rounded-lg bg-slate-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-800">
+                                    Chọn năm học
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+
+                    <div class="p-6">
+                        @if ($selectedFolder)
+                            <p class="mb-4 text-sm text-gray-600">Đang xem folder: <span
+                                    class="font-semibold">{{ $selectedFolder["name"] }}</span>
+                                ({{ $selectedFolder["key"] }})</p>
+
+                            @if (!empty($folderFiles))
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full text-sm">
+                                        <thead>
+                                            <tr class="border-b text-left text-gray-500">
+                                                <th class="py-3 pr-4">Tên tệp</th>
+                                                <th class="py-3 pr-4">Kích thước</th>
+                                                <th class="py-3 pr-4">Cập nhật</th>
+                                                <th class="py-3">Thao tác</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($folderFiles as $file)
+                                                <tr class="border-b last:border-0">
+                                                    <td class="py-3 pr-4 text-gray-800">{{ $file["name"] }}</td>
+                                                    <td class="py-3 pr-4 text-gray-700">
+                                                        {{ number_format(($file["size"] ?? 0) / 1024, 2) }} KB</td>
+                                                    <td class="py-3 pr-4 text-gray-600">{{ $file["updated_at"] }}</td>
+                                                    <td class="py-3">
+                                                        <form method="POST"
+                                                            action="{{ route("admin.folders.files.delete", ["folderKey" => $selectedFolder["key"]]) }}"
+                                                            onsubmit="return confirm('Bạn chắc chắn muốn xóa file này?');">
+                                                            @csrf
+                                                            @method("DELETE")
+                                                            <input type="hidden" name="file_name"
+                                                                value="{{ $file["name"] }}">
+                                                            <button type="submit"
+                                                                class="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700">Xóa</button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @else
+                                <div class="text-sm text-gray-500">Folder này chưa có file nào.</div>
+                            @endif
+                        @elseif (!empty($folders))
+                            <div class="text-sm text-gray-600">Hãy chọn một năm học ở nút "Chọn năm học" phía trên để
+                                xem
+                                file.</div>
+                        @else
+                            <div class="text-sm text-gray-500">Chưa có folder năm học nào để hiển thị.</div>
+                        @endif
+                    </div>
+                </div>
+
             </div>
+        </main>
 
-        </div>
-    </main>
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                const fileInput = document.getElementById("documentFiles");
+                const filesPanel = document.getElementById("selected-files-panel");
+                const filesList = document.getElementById("selected-files-list");
 
-</body>
+                if (!fileInput || !filesPanel || !filesList) {
+                    return;
+                }
+
+                fileInput.addEventListener("change", function() {
+                    filesList.innerHTML = "";
+
+                    if (!fileInput.files || fileInput.files.length === 0) {
+                        filesPanel.classList.add("hidden");
+                        return;
+                    }
+
+                    Array.from(fileInput.files).forEach(function(file) {
+                        const item = document.createElement("li");
+                        const sizeKb = (file.size / 1024).toFixed(2);
+                        item.textContent = file.name + " (" + sizeKb + " KB)";
+                        filesList.appendChild(item);
+                    });
+
+                    filesPanel.classList.remove("hidden");
+                });
+            });
+        </script>
+
+    </body>
+
 </html>

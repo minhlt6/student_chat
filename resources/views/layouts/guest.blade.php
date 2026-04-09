@@ -1,37 +1,47 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+<html lang="{{ str_replace("_", "-", app()->getLocale()) }}">
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <title>{{ config("app.name", "Laravel") }}</title>
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="font-sans text-gray-900 antialiased bg-[#4a7b9d]">
-    <div class="min-h-screen flex flex-col md:flex-row">
+        <link rel="preconnect" href="https://fonts.bunny.net">
+        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-        <div class="md:w-5/12 lg:w-1/2 flex flex-col justify-center items-center p-8 relative min-h-[300px] md:min-h-screen">
-            <div class="text-center text-white mb-8 z-10 mt-10 md:mt-0">
-                <img src="{{ asset('images/logo-tlu.png') }}" alt="Logo TLU" class="w-20 h-20 md:w-24 md:h-24 mx-auto mb-4 object-contain drop-shadow-lg">
-                <h2 class="text-xl md:text-2xl font-serif tracking-wide drop-shadow-md">Đại học Thủy lợi</h2>
+        @vite(["resources/css/app.css", "resources/js/app.js"])
+    </head>
+
+    <body class="bg-[#4f7ea3] font-sans text-gray-900 antialiased">
+        <div class="flex min-h-screen flex-col lg:flex-row">
+            <div
+                class="relative flex flex-col items-center justify-center overflow-hidden px-8 py-10 lg:w-1/2 lg:py-14">
+                <div
+                    class="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.12),transparent_45%),radial-gradient(circle_at_80%_80%,rgba(255,255,255,0.08),transparent_40%)]">
+                </div>
+
+                <div class="relative z-10 mb-10 text-center text-white">
+                    <img src="{{ asset("images/logo-tlu.png") }}" alt="Logo TLU"
+                        class="mx-auto mb-4 h-20 w-20 object-contain drop-shadow-lg md:h-24 md:w-24">
+                    <h2 class="font-serif text-3xl font-semibold tracking-tight md:text-4xl">Đại học Thủy lợi</h2>
+                </div>
+
+                <div
+                    class="relative z-10 w-full max-w-[420px] rounded-xl border border-white/10 bg-white/5 p-7 shadow-[0_20px_55px_rgba(8,20,40,0.25)] md:p-9">
+                    <img src="{{ asset("images/3d-edu.png") }}" alt="Illustration"
+                        class="h-auto w-full object-contain drop-shadow-2xl">
+                </div>
             </div>
 
-            <div class="relative w-full max-w-xs md:max-w-sm z-10 flex-1 flex items-center justify-center">
-                <img src="{{ asset('images/3d-edu.png') }}" alt="Illustration" class="w-full h-auto object-contain drop-shadow-2xl hover:-translate-y-2 transition-transform duration-500">
+            <div
+                class="flex w-full items-center justify-center bg-[#f5f7fb] px-6 py-10 shadow-2xl sm:px-10 sm:py-12 lg:w-1/2 lg:rounded-l-[56px] lg:bg-white lg:px-14">
+                <div class="w-full max-w-md lg:max-w-lg">
+                    {{ $slot }}
+                </div>
             </div>
         </div>
+    </body>
 
-        <div class="w-full md:w-7/12 lg:w-1/2 bg-white flex justify-center items-center p-8 sm:p-12 md:rounded-l-[4rem] shadow-2xl relative z-20 min-h-screen md:min-h-0">
-            <div class="w-full max-w-md">
-                {{ $slot }}
-            </div>
-        </div>
-
-    </div>
-</body>
 </html>

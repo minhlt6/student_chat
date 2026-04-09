@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Database\Connectors\NeonConnectionFactory;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -11,7 +13,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton('db.factory', function ($app) {
+            return new NeonConnectionFactory($app);
+        });
     }
 
     /**
@@ -20,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if (env('APP_ENV') === 'production') {
-        \Illuminate\Support\Facades\URL::forceScheme('https');
-    }
+            URL::forceScheme('https');
+        }
     }
 }

@@ -37,6 +37,16 @@ return [
 
     'chatbot' => [
         'base_url' => env('CHATBOT_API_BASE_URL', 'https://chatbot-tlu-m-chatbot.hf.space'),
+        'space_id' => env('CHATBOT_SPACE_ID'),
+        'space_endpoint' => env('CHATBOT_SPACE_ENDPOINT'),
+        'access_token' => env('CHATBOT_API_TOKEN'),
+    ],
+
+    'supabase' => [
+        'url' => env('SUPABASE_URL'),
+        'anon_key' => env('SUPABASE_ANON_KEY'),
+        'service_role_key' => env('SUPABASE_SERVICE_ROLE_KEY'),
+        'storage_bucket' => env('SUPABASE_STORAGE_BUCKET', 'file'),
     ],
 
 ];
